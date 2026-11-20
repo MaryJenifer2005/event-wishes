@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Event Wishes</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@400;600;800&display=swap">
+<style>
+:root{
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+  --bg:#f3f5fb; --surface:#ffffff; --ink:#1c2340; --muted:#5d6584; --line:#d9deee;
+  --accent:#3b4cca; --accent-ink:#ffffff; --hot:#e0572f; --hot-bg:#fde9e2; --soon:#f2b01e; --ok:#1f8f5f;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    color-scheme:dark;
+    --bg:#12162a; --surface:#1c2140; --ink:#eef0fb; --muted:#9aa2c7; --line:#2f365e;
+    --accent:#8c98ff; --accent-ink:#12162a; --hot:#ff8a5f; --hot-bg:#3a2432; --soon:#f2b01e; --ok:#52d19b;
+  }
+}
+:root[data-theme="dark"]{
+  color-scheme:dark;
+  --bg:#12162a; --surface:#1c2140; --ink:#eef0fb; --muted:#9aa2c7; --line:#2f365e;
+  --accent:#8c98ff; --accent-ink:#12162a; --hot:#ff8a5f; --hot-bg:#3a2432; --soon:#f2b01e; --ok:#52d19b;
+}
+*,*::before,*::after{box-sizing:inherit}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"Bricolage Grotesque",system-ui,-apple-system,"Segoe UI",sans-serif;line-height:1.5}
+main{max-width:640px;margin:0 auto;padding:20px 16px 90px}
+h1{font-size:2rem;font-weight:800;margin:8px 0 4px;letter-spacing:-.02em}
+.sub{color:var(--muted);margin:0 0 20px}
+.banner{background:var(--hot-bg);border-left:6px solid var(--hot);border-radius:10px;padding:14px 16px;margin-bottom:18px}
+.banner b{display:block;font-size:1.05rem}
+.banner[hidden]{display:none}
+.bar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px}
+button,.btn{font:inherit;cursor:pointer;border:1px solid var(--line);background:var(--surface);color:var(--ink);padding:8px 14px;border-radius:8px;text-decoration:none;display:inline-block}
+button:focus-visible,input:focus-visible,textarea:focus-visible,a:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent);font-weight:600}
+.list{display:grid;gap:10px}
+.ev{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:14px 16px;display:grid;grid-template-columns:72px 1fr;gap:14px;align-items:center}
+.days{text-align:center;border-right:1px solid var(--line);padding-right:12px}
+.days .n{font-size:1.9rem;font-weight:800;line-height:1}
+.days .l{font-size:.8rem;color:var(--muted)}
+.ev.today .n,.ev.today .l{color:var(--hot)}
+.ev.tomorrow .n,.ev.tomorrow .l{color:var(--soon)}
+.ev h3{margin:0;font-size:1.1rem}
+.meta{color:var(--muted);font-size:.9rem;margin:2px 0 8px}
+.acts{display:flex;gap:6px;flex-wrap:wrap}
+.acts button,.acts a{padding:5px 10px;font-size:.85rem}
+.wa{background:var(--ok);color:#fff;border-color:var(--ok)}
+.empty{border:2px dashed var(--line);border-radius:12px;padding:28px;text-align:center;color:var(--muted)}
+.fab{position:fixed;right:18px;bottom:calc(18px + env(safe-area-inset-bottom,0px));font-size:1rem;padding:12px 20px;border-radius:999px;box-shadow:0 4px 14px rgba(0,0,0,.25)}
+dialog{border:1px solid var(--line);border-radius:14px;background:var(--surface);color:var(--ink);width:min(440px,92vw);padding:20px}
+dialog::backdrop{background:rgba(10,14,35,.55)}
+label{display:block;font-size:.9rem;margin:12px 0 4px;color:var(--muted)}
+input,textarea{width:100%;font:inherit;padding:9px 10px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink)}
+.row{display:flex;gap:8px;justify-content:flex-end;margin-top:18px}
+.note{font-size:.85rem;color:var(--muted);margin-top:26px}
+@media (prefers-reduced-motion:no-preference){.ev{transition:transform .15s}.ev:hover{transform:translateY(-2px)}}
+</style>
+</head>
+<body>
+<main>
+  <h1>Event Wishes</h1>
+  <p class="sub">Save birthdays and anniversaries. Get a reminder the day before and send your wishes in one tap.</p>
+
+  <div class="banner" id="banner" hidden></div>
+
+  <div class="bar">
+    <button id="notifBtn">Turn on notifications</button>
+    <button id="exportBtn">Back up events</button>
+    <button id="importBtn">Restore events</button>
+  </div>
+
+  <div class="list" id="list"></div>
+
+  <p class="note">Your events stay in this browser on this device. Reminders pop up while this page is open. For reminders when the page is closed, use the Android app.</p>
+</main>
+
+<button class="primary fab" id="addBtn">Add event</button>
+
+<dialog id="dlg">
+  <h2 id="dlgTitle" style="margin:0 0 4px">New event</h2>
+  <label for="fTitle">Event name</label>
+  <input id="fTitle" placeholder="Amma’s birthday">
+  <label for="fDate">Date</label>
+  <input id="fDate" type="date">
+  <label for="fPhone">Phone with country code</label>
+  <input id="fPhone" type="tel" placeholder="919876543210">
+  <label for="fMsg">Wish message</label>
+  <textarea id="fMsg" rows="3"></textarea>
+  <div class="row">
+    <button id="cancelBtn">Cancel</button>
+    <button class="primary" id="saveBtn">Save event</button>
+  </div>
+</dialog>
+
+<script>
+(function(){
+  var KEY='eventwishes.events', SENT='eventwishes.sent';
+  var events=[], sent={}, editId=null;
+  var $=function(id){return document.getElementById(id)};
+
+  function load(){
+    try{events=JSON.parse(localStorage.getItem(KEY)||'[]')}catch(e){events=[]}
+    try{sent=JSON.parse(localStorage.getItem(SENT)||'{}')}catch(e){sent={}}
+  }
+  function save(){
+    try{localStorage.setItem(KEY,JSON.stringify(events))}catch(e){}
+  }
+  function saveSent(){
+    try{localStorage.setItem(SENT,JSON.stringify(sent))}catch(e){}
+  }
+
+  function today0(){var n=new Date();return new Date(n.getFullYear(),n.getMonth(),n.getDate())}
+  function info(ev){
+    var p=ev.date.split('-').map(Number), t=today0();
+    var next=new Date(t.getFullYear(),p[1]-1,p[2]);
+    if(next<t) next=new Date(t.getFullYear()+1,p[1]-1,p[2]);
+    var days=Math.round((next-t)/86400000);
+    return {days:days,years:next.getFullYear()-p[0],next:next};
+  }
+  function digits(s){return String(s||'').replace(/[^0-9]/g,'')}
+  function waUrl(ev){return 'https://wa.me/'+digits(ev.phone)+'?text='+encodeURIComponent(ev.msg||'')}
+  function smsUrl(ev){return 'sms:'+encodeURIComponent(ev.phone)+'?body='+encodeURIComponent(ev.msg||'')}
+  function esc(s){return String(s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})}
+
+  function render(){
+    var list=$('list'), rows=events.map(function(e){return {e:e,i:info(e)}});
+    rows.sort(function(a,b){return a.i.days-b.i.days});
+    if(!rows.length){
+      list.innerHTML='<div class="empty">No events yet. Select <b>Add event</b> to save your first birthday or anniversary.</div>';
+    } else {
+      list.innerHTML=rows.map(function(r){
+        var e=r.e,i=r.i,cls=i.days===0?'today':i.days===1?'tomorrow':'';
+        var n=i.days===0?'Today':i.days, l=i.days===0?'':i.days===1?'day left':'days left';
+        var d=new Date(e.date+'T00:00:00');
+        var meta=d.toLocaleDateString(undefined,{day:'numeric',month:'long',year:'numeric'});
+        if(i.years>0) meta+=' · '+i.years+' years';
+        if(e.phone) meta+=' · +'+digits(e.phone);
+        var acts='';
+        if(e.phone){
+          acts+='<a class="btn wa" target="_blank" rel="noopener" href="'+waUrl(e)+'">Send on WhatsApp</a>';
+          acts+='<a class="btn" href="'+smsUrl(e)+'">Send SMS</a>';
+        }
+        acts+='<button data-edit="'+e.id+'">Edit</button><button data-del="'+e.id+'">Delete</button>';
+        return '<div class="ev '+cls+'"><div class="days"><div class="n">'+n+'</div><div class="l">'+l+'</div></div>'+
+          '<div><h3>'+esc(e.title)+'</h3><div class="meta">'+esc(meta)+'</div><div class="acts">'+acts+'</div></div></div>';
+      }).join('');
+    }
+    var soon=rows.filter(function(r){return r.i.days<=1});
+    var b=$('banner');
+    if(soon.length){
+      b.hidden=false;
+      b.innerHTML=soon.map(function(r){
+        return '<b>'+(r.i.days===0?'Today: ':'Tomorrow: ')+esc(r.e.title)+'</b>';
+      }).join('');
+    } else b.hidden=true;
+  }
+
+  function openDlg(ev){
+    editId=ev?ev.id:null;
+    $('dlgTitle').textContent=ev?'Edit event':'New event';
+    $('fTitle').value=ev?ev.title:'';
+    $('fDate').value=ev?ev.date:'';
+    $('fPhone').value=ev?ev.phone:'';
+    $('fMsg').value=ev?ev.msg:'Wishing you a very happy day! 🎉';
+    $('dlg').showModal();
+  }
+
+  function notify(title,body,url){
+    if(!('Notification' in window)||Notification.permission!=='granted') return;
+    try{
+      var n=new Notification(title,{body:body});
+      if(url) n.onclick=function(){window.open(url,'_blank')};
+    }catch(e){}
+  }
+  function check(){
+    var now=new Date(), h=now.getHours(), stamp=now.toISOString().slice(0,10);
+    events.forEach(function(e){
+      var d=info(e).days;
+      if(d===1&&h>=9&&!sent[e.id+':1:'+stamp]){
+        sent[e.id+':1:'+stamp]=1; saveSent();
+        notify('Tomorrow: '+e.title,'Don’t forget '+e.title+' tomorrow!');
+      }
+      if(d===0&&h>=8&&!sent[e.id+':0:'+stamp]){
+        sent[e.id+':0:'+stamp]=1; saveSent();
+        notify('Today: '+e.title,e.phone?'Select to send your wishes':'It’s today!',e.phone?waUrl(e):null);
+      }
+    });
+  }
+
+  $('addBtn').onclick=function(){openDlg(null)};
+  $('cancelBtn').onclick=function(){$('dlg').close()};
+  $('saveBtn').onclick=function(){
+    var title=$('fTitle').value.trim(), date=$('fDate').value;
+    if(!title||!date){alert('Enter an event name and pick a date.');return}
+    var data={title:title,date:date,phone:$('fPhone').value.trim(),msg:$('fMsg').value};
+    if(editId){
+      events.forEach(function(e){if(e.id===editId){for(var k in data)e[k]=data[k]}});
+    } else {
+      data.id=Date.now(); events.push(data);
+    }
+    save(); render(); check(); $('dlg').close();
+  };
+  $('list').onclick=function(ev){
+    var t=ev.target;
+    if(t.dataset.edit){
+      var found=events.filter(function(e){return String(e.id)===t.dataset.edit})[0];
+      if(found) openDlg(found);
+    }
+    if(t.dataset.del){
+      if(confirm('Delete this event?')){
+        events=events.filter(function(e){return String(e.id)!==t.dataset.del});
+        save(); render();
+      }
+    }
+  };
+  $('notifBtn').onclick=function(){
+    if(!('Notification' in window)){alert('This browser does not support notifications.');return}
+    Notification.requestPermission().then(function(p){
+      $('notifBtn').textContent=p==='granted'?'Notifications on':'Notifications blocked';
+      if(p==='granted') check();
+    });
+  };
+  $('exportBtn').onclick=function(){
+    var text=JSON.stringify(events);
+    if(navigator.clipboard&&navigator.clipboard.writeText){
+      navigator.clipboard.writeText(text).then(function(){alert('Backup copied. Paste it into a note or message to keep it.')},function(){prompt('Copy this backup:',text)});
+    } else prompt('Copy this backup:',text);
+  };
+  $('importBtn').onclick=function(){
+    var t=prompt('Paste your backup here:');
+    if(!t) return;
+    try{
+      var arr=JSON.parse(t);
+      if(!Array.isArray(arr)) throw 0;
+      events=arr.filter(function(e){return e&&e.title&&e.date}).map(function(e,i){e.id=e.id||Date.now()+i;e.phone=e.phone||'';e.msg=e.msg||'';return e});
+      save(); render();
+    }catch(e){alert('That backup could not be read. Paste the full text you copied.')}
+  };
+
+  if('Notification' in window&&Notification.permission==='granted') $('notifBtn').textContent='Notifications on';
+  load(); render(); check();
+  setInterval(function(){check();render()},60000);
+})();
+</script>
+</body>
+</html>
